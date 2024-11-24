@@ -9,7 +9,13 @@ import (
 
 type Config struct {
 	TasksFilePath string
+	Environment  string
 }
+
+const (
+	EnvTest = "test"
+	EnvProd = "prod"
+)
 
 // GetProjectRootPath returns the absolute path of the project root
 func GetProjectRootPath() (string, error) {
@@ -31,17 +37,34 @@ func GetProjectRootPath() (string, error) {
 
 // NewConfig creates a new Config instance
 func NewConfig() (*Config, error) {
+	return NewConfigWithEnv(EnvProd)
+}
+
+// NewTestConfig creates a new Config instance for testing
+func NewTestConfig() (*Config, error) {
+	return NewConfigWithEnv(EnvTest)
+}
+
+// NewConfigWithEnv creates a new Config instance with specified environment
+func NewConfigWithEnv(env string) (*Config, error) {
 	projectRoot, err := GetProjectRootPath()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get project root: %w", err)
 	}
 
-	dataDir := filepath.Join(projectRoot, "data")
+	var dataDir string
+	if env == EnvTest {
+		dataDir = filepath.Join(projectRoot, "testdata")
+	} else {
+		dataDir = filepath.Join(projectRoot, "data")
+	}
+
 	if err := os.MkdirAll(dataDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
 	return &Config{
 		TasksFilePath: filepath.Join(dataDir, "tasks.json"),
+		Environment:  env,
 	}, nil
 }

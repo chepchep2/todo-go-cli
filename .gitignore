@@ -40,3 +40,6 @@ Thumbs.db
 
 # Debug files
 __debug_bin
+
+# Test data directory
+testdata/
