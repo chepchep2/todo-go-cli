@@ -25,7 +25,7 @@ func main() {
 	}
 }
 
-func run(taskService *service.DefaultTaskService, args []string) error {
+func run(taskService service.TaskService, args []string) error {
 	if len(args) < 2 {
 		printUsage()
 		return nil
@@ -50,6 +50,12 @@ func run(taskService *service.DefaultTaskService, args []string) error {
 		}
 		return taskService.MarkTaskAsDone(args[2])
 
+	case "get":
+		if len(args) < 3 {
+			return fmt.Errorf("list 번호를 입력하세요")
+		}
+
+		return taskService.GetTaskByID(args[2])
 	default:
 		printUsage()
 		return nil
@@ -61,4 +67,5 @@ func printUsage() {
 	fmt.Println("  todo add [task]    Add a new task")
 	fmt.Println("  todo list          Show all tasks")
 	fmt.Println("  todo done [id]     Mark a task as done")
+	fmt.Println("  todo get [id]      Get a task by ID")
 }

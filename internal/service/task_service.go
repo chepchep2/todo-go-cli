@@ -13,6 +13,7 @@ type TaskService interface {
 	AddTask(text string) error
 	ListTasks()
 	MarkTaskAsDone(taskID string) error
+	GetTaskByID(taskID string) error
 }
 
 // DefaultTaskService implements TaskService
@@ -21,7 +22,7 @@ type DefaultTaskService struct {
 }
 
 // NewTaskService creates a new DefaultTaskService instance
-func NewTaskService(repo repository.TaskRepository) *DefaultTaskService {
+func NewTaskService(repo repository.TaskRepository) TaskService {
 	return &DefaultTaskService{
 		repo: repo,
 	}
@@ -74,5 +75,20 @@ func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
 	}
 
 	fmt.Printf("할일 %d번이 완료되었습니다.\n", id)
+	return nil
+}
+
+func (s *DefaultTaskService) GetTaskByID(taskID string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return fmt.Errorf("invalid task ID: %s", taskID)
+	}
+
+	task, err := s.repo.FindTaskByID(id)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(task.String())
 	return nil
 }
