@@ -15,7 +15,7 @@ type TaskRepository interface {
 	LoadTasks() error
 	AddTask(task *domain.Task)
 	FindTaskByID(id int) (*domain.Task, error)
-	DeleteTasks() error
+	DeleteTasks(id int) error
 }
 
 // FileTaskRepository implements TaskRepository using file storage
@@ -76,6 +76,24 @@ func (r *FileTaskRepository) SaveTasks() error {
 	return os.WriteFile(r.filePath, data, 0644)
 }
 
-func (r *FileTaskRepository) DeleteTasks() error {
+func (r *FileTaskRepository) DeleteTasks(id int) error {
+	index := -1
+	for i, task := range r.tasks {
+		if task.ID == id {
+			index = i
+			break
+		}
+	}
+
+	if index == -1 {
+		return fmt.Errorf("task with ID %d not found", id)
+	}
+
+	r.tasks = append(r.tasks[:index], r.tasks[index+1:]...)
+
+	if err := r.SaveTasks(); err != nil {
+		return fmt.Errorf("failed to save tasks: %w", err)
+	}
+
 	return nil
 }
