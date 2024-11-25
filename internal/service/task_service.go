@@ -95,5 +95,16 @@ func (s *DefaultTaskService) GetTaskByID(taskID string) error {
 }
 
 func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return fmt.Errorf("invalid task ID: %s", taskID)
+	}
+
+	err = s.repo.DeleteTasks(id)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Task %d has been deleted\n", id)
 	return nil
 }

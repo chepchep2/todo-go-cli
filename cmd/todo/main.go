@@ -62,7 +62,7 @@ func run(taskService service.TaskService, args []string) error {
 			return fmt.Errorf("list 번호를 입력하기")
 		}
 
-		return nil
+		return taskService.DeleteTaskByID(args[2])
 	default:
 		printUsage()
 		return nil
