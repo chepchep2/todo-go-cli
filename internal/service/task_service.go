@@ -14,6 +14,7 @@ type TaskService interface {
 	ListTasks()
 	MarkTaskAsDone(taskID string) error
 	GetTaskByID(taskID string) error
+	DeleteTaskByID(taskID string) error
 }
 
 // DefaultTaskService implements TaskService
@@ -90,5 +91,9 @@ func (s *DefaultTaskService) GetTaskByID(taskID string) error {
 	}
 
 	fmt.Println(task.String())
+	return nil
+}
+
+func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
 	return nil
 }

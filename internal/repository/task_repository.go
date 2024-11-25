@@ -15,6 +15,7 @@ type TaskRepository interface {
 	LoadTasks() error
 	AddTask(task *domain.Task)
 	FindTaskByID(id int) (*domain.Task, error)
+	DeleteTasks() error
 }
 
 // FileTaskRepository implements TaskRepository using file storage
@@ -29,14 +30,14 @@ func NewFileTaskRepository(filePath string) TaskRepository {
 		tasks:    make([]*domain.Task, 0),
 		filePath: filePath,
 	}
-	
+
 	if err := repo.LoadTasks(); err != nil {
 		// If file doesn't exist, start with empty tasks
 		if os.IsNotExist(err) {
 			repo.tasks = make([]*domain.Task, 0)
 		}
 	}
-	
+
 	return repo
 }
 
@@ -73,4 +74,8 @@ func (r *FileTaskRepository) SaveTasks() error {
 	}
 
 	return os.WriteFile(r.filePath, data, 0644)
+}
+
+func (r *FileTaskRepository) DeleteTasks() error {
+	return nil
 }

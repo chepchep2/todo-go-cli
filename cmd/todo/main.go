@@ -56,6 +56,13 @@ func run(taskService service.TaskService, args []string) error {
 		}
 
 		return taskService.GetTaskByID(args[2])
+
+	case "delete":
+		if len(args) < 3 {
+			return fmt.Errorf("list 번호를 입력하기")
+		}
+
+		return nil
 	default:
 		printUsage()
 		return nil
@@ -68,4 +75,5 @@ func printUsage() {
 	fmt.Println("  todo list          Show all tasks")
 	fmt.Println("  todo done [id]     Mark a task as done")
 	fmt.Println("  todo get [id]      Get a task by ID")
+	fmt.Println("  todo delete [id]   Delete a task by ID")
 }
