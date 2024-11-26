@@ -56,7 +56,16 @@ func (r *FileTaskRepository) FindTaskByID(id int) (*domain.Task, error) {
 			return task, nil
 		}
 	}
+	// task, found := slices.FindFunc(r.tasks, func(t *domain.Task) bool {
+	// 	return t.ID == id
+	// })
+
+	// if !found {
+	// 	return nil, fmt.Errorf("task with ID %d not found", id)
+	// }
+
 	return nil, fmt.Errorf("task with ID %d not found", id)
+	// return task, nil
 }
 
 func (r *FileTaskRepository) LoadTasks() error {
