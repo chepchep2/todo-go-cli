@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
 
 	"todo-go-cli/internal/domain"
 )
@@ -89,11 +90,9 @@ func (r *FileTaskRepository) DeleteTasks(id int) error {
 		return fmt.Errorf("task with ID %d not found", id)
 	}
 
-	r.tasks = append(r.tasks[:index], r.tasks[index+1:]...)
-
-	if err := r.SaveTasks(); err != nil {
-		return fmt.Errorf("failed to save tasks: %w", err)
-	}
+	r.tasks = slices.DeleteFunc(r.tasks, func(t *domain.Task) bool {
+		return t.ID == id
+	})
 
 	return nil
 }

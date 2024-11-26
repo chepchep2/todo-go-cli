@@ -105,6 +105,10 @@ func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
 		return err
 	}
 
+	if err := s.repo.SaveTasks(); err != nil {
+		return fmt.Errorf("failed to save tasks: %w", err)
+	}
+
 	fmt.Printf("Task %d has been deleted\n", id)
 	return nil
 }
