@@ -51,21 +51,15 @@ func (r *FileTaskRepository) AddTask(task *domain.Task) {
 }
 
 func (r *FileTaskRepository) FindTaskByID(id int) (*domain.Task, error) {
-	for _, task := range r.tasks {
-		if task.ID == id {
-			return task, nil
-		}
+	index := slices.IndexFunc(r.tasks, func(t *domain.Task) bool {
+		return t.ID == id
+	})
+
+	if index == -1 {
+		return nil, fmt.Errorf("task with ID %d not found", id)
 	}
-	// task, found := slices.FindFunc(r.tasks, func(t *domain.Task) bool {
-	// 	return t.ID == id
-	// })
 
-	// if !found {
-	// 	return nil, fmt.Errorf("task with ID %d not found", id)
-	// }
-
-	return nil, fmt.Errorf("task with ID %d not found", id)
-	// return task, nil
+	return r.tasks[index], nil
 }
 
 func (r *FileTaskRepository) LoadTasks() error {
