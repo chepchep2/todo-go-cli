@@ -87,21 +87,15 @@ func (r *FileTaskRepository) SaveTasks() error {
 }
 
 func (r *FileTaskRepository) DeleteTasks(id int) error {
-	index := -1
-	for i, task := range r.tasks {
-		if task.ID == id {
-			index = i
-			break
-		}
-	}
-
-	if index == -1 {
-		return fmt.Errorf("task with ID %d not found", id)
-	}
+	oldLen := len(r.tasks)
 
 	r.tasks = slices.DeleteFunc(r.tasks, func(t *domain.Task) bool {
 		return t.ID == id
 	})
+
+	if oldLen == len(r.tasks) {
+		return fmt.Errorf("task with ID %d not found", id)
+	}
 
 	return nil
 }
