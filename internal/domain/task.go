@@ -18,8 +18,8 @@ func NewTask(id int, text string) *Task {
 }
 
 // MarkAsDone marks the task as done
-func (t *Task) MarkAsDone() {
-	t.Done = true
+func (t *Task) ToggleAsDone() {
+	t.Done = !t.Done
 }
 
 // String returns a string representation of the task

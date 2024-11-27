@@ -69,13 +69,18 @@ func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
 		return err
 	}
 
-	task.MarkAsDone()
+	task.ToggleAsDone()
 
 	if err := s.repo.SaveTasks(); err != nil {
 		return fmt.Errorf("failed to save task: %w", err)
 	}
 
-	fmt.Printf("할일 %d번이 완료되었습니다.\n", id)
+	status := "완료"
+	if !task.Done {
+		status = "미완료"
+	}
+
+	fmt.Printf("할일 %d번이 %s 상태로 변경되었습니다.\n", id, status)
 	return nil
 }
 
