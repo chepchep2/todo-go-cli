@@ -103,5 +103,5 @@ func (r *FileTaskRepository) UpdateTask(id int, newTask string) error {
 
 	task.Text = newTask
 
-	return r.SaveTasks()
+	return nil
 }

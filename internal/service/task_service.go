@@ -133,6 +133,10 @@ func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error
 		return err
 	}
 
+	if err := s.repo.SaveTasks(); err != nil {
+		return fmt.Errorf("failed to save tasks: %w", err)
+	}
+
 	fmt.Printf("Task %d has been updated\n", id)
 
 	return nil
