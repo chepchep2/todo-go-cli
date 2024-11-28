@@ -59,10 +59,16 @@ func run(taskService service.TaskService, args []string) error {
 
 	case "delete":
 		if len(args) < 3 {
-			return fmt.Errorf("list 번호를 입력하기")
+			return fmt.Errorf("list 번호를 입력하세요")
 		}
 
 		return taskService.DeleteTaskByID(args[2])
+
+	case "update":
+		if len(args) < 4 {
+			return fmt.Errorf("update 번호와 update 내용을 입력하세요")
+		}
+		return taskService.UpdateTaskById(args[2], args[3])
 	default:
 		printUsage()
 		return nil

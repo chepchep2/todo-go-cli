@@ -15,6 +15,7 @@ type TaskService interface {
 	MarkTaskAsDone(taskID string) error
 	GetTaskByID(taskID string) error
 	DeleteTaskByID(taskID string) error
+	UpdateTaskById(taskID string, newTask string) error
 }
 
 // DefaultTaskService implements TaskService
@@ -115,5 +116,24 @@ func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
 	}
 
 	fmt.Printf("Task %d has been deleted\n", id)
+	return nil
+}
+
+func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return fmt.Errorf("invalid task ID: %s", taskID)
+	}
+
+	if newTask == "" {
+		return fmt.Errorf("new task cannot be empty")
+	}
+
+	if err := s.repo.UpdateTask(id, newTask); err != nil {
+		return err
+	}
+
+	fmt.Printf("Task %d has been updated\n", id)
+
 	return nil
 }

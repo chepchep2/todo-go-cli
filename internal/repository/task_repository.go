@@ -17,6 +17,7 @@ type TaskRepository interface {
 	AddTask(task *domain.Task)
 	FindTaskByID(id int) (*domain.Task, error)
 	DeleteTasks(id int) error
+	UpdateTask(id int, newTask string) error
 }
 
 // FileTaskRepository implements TaskRepository using file storage
@@ -92,4 +93,15 @@ func (r *FileTaskRepository) DeleteTasks(id int) error {
 	}
 
 	return nil
+}
+
+func (r *FileTaskRepository) UpdateTask(id int, newTask string) error {
+	task, err := r.FindTaskByID(id)
+	if err != nil {
+		return err
+	}
+
+	task.Text = newTask
+
+	return r.SaveTasks()
 }
