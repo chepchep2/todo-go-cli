@@ -16,6 +16,7 @@ type TaskService interface {
 	GetTaskByID(taskID string) error
 	DeleteTaskByID(taskID string) error
 	UpdateTaskById(taskID string, newTask string) error
+	ShowStatus() error
 }
 
 // DefaultTaskService implements TaskService
@@ -138,6 +139,25 @@ func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error
 	}
 
 	fmt.Printf("Task %d has been updated\n", id)
+
+	return nil
+}
+
+func (s *DefaultTaskService) ShowStatus() error {
+	tasks := s.repo.GetTasks()
+
+	total := len(tasks)
+	completed := 0
+
+	for _, task := range tasks {
+		if task.Done {
+			completed++
+		}
+	}
+
+	fmt.Printf("전체 할일 수: %d\n", total)
+	fmt.Printf("완료된 할일: %d\n", completed)
+	fmt.Printf("미완료된 할일: %d\n", total-completed)
 
 	return nil
 }

@@ -69,6 +69,9 @@ func run(taskService service.TaskService, args []string) error {
 			return fmt.Errorf("update 번호와 update 내용을 입력하세요")
 		}
 		return taskService.UpdateTaskById(args[2], args[3])
+
+	case "status":
+		return taskService.ShowStatus()
 	default:
 		printUsage()
 		return nil
@@ -82,4 +85,5 @@ func printUsage() {
 	fmt.Println("  todo done [id]     Mark a task as done")
 	fmt.Println("  todo get [id]      Get a task by ID")
 	fmt.Println("  todo delete [id]   Delete a task by ID")
+	fmt.Println("  todo status        show task's status")
 }
