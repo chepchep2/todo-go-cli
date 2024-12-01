@@ -14,6 +14,9 @@ type TaskService interface {
 	ListTasks()
 	MarkTaskAsDone(taskID string) error
 	GetTaskByID(taskID string) error
+	DeleteTaskByID(taskID string) error
+	UpdateTaskById(taskID string, newTask string) error
+	ShowStatus() error
 }
 
 // DefaultTaskService implements TaskService
@@ -68,13 +71,18 @@ func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
 		return err
 	}
 
-	task.MarkAsDone()
+	task.ToggleAsDone()
 
 	if err := s.repo.SaveTasks(); err != nil {
 		return fmt.Errorf("failed to save task: %w", err)
 	}
 
-	fmt.Printf("할일 %d번이 완료되었습니다.\n", id)
+	status := "완료"
+	if !task.Done {
+		status = "미완료"
+	}
+
+	fmt.Printf("할일 %d번이 %s 상태로 변경되었습니다.\n", id, status)
 	return nil
 }
 
@@ -90,5 +98,66 @@ func (s *DefaultTaskService) GetTaskByID(taskID string) error {
 	}
 
 	fmt.Println(task.String())
+	return nil
+}
+
+func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return fmt.Errorf("invalid task ID: %s", taskID)
+	}
+
+	err = s.repo.DeleteTasks(id)
+	if err != nil {
+		return err
+	}
+
+	if err := s.repo.SaveTasks(); err != nil {
+		return fmt.Errorf("failed to save tasks: %w", err)
+	}
+
+	fmt.Printf("Task %d has been deleted\n", id)
+	return nil
+}
+
+func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error {
+	id, err := strconv.Atoi(taskID)
+	if err != nil {
+		return fmt.Errorf("invalid task ID: %s", taskID)
+	}
+
+	if newTask == "" {
+		return fmt.Errorf("new task cannot be empty")
+	}
+
+	if err := s.repo.UpdateTask(id, newTask); err != nil {
+		return err
+	}
+
+	if err := s.repo.SaveTasks(); err != nil {
+		return fmt.Errorf("failed to save tasks: %w", err)
+	}
+
+	fmt.Printf("Task %d has been updated\n", id)
+
+	return nil
+}
+
+func (s *DefaultTaskService) ShowStatus() error {
+	tasks := s.repo.GetTasks()
+
+	total := len(tasks)
+	completed := 0
+
+	for _, task := range tasks {
+		if task.Done {
+			completed++
+		}
+	}
+
+	fmt.Printf("전체 할일 수: %d\n", total)
+	fmt.Printf("완료된 할일: %d\n", completed)
+	fmt.Printf("미완료된 할일: %d\n", total-completed)
+
 	return nil
 }

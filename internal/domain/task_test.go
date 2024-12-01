@@ -25,9 +25,9 @@ var _ = Describe("Task", func() {
 	Describe("MarkAsDone", func() {
 		It("should mark the task as done", func() {
 			Expect(task.Done).To(BeFalse())
-			
+
 			task.MarkAsDone()
-			
+
 			Expect(task.Done).To(BeTrue())
 		})
 	})
