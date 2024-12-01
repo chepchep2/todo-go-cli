@@ -22,13 +22,15 @@ var _ = Describe("Task", func() {
 		})
 	})
 
-	Describe("MarkAsDone", func() {
-		It("should mark the task as done", func() {
+	Describe("ToggleAsDone", func() {
+		It("should toggle the task's done status", func() {
 			Expect(task.Done).To(BeFalse())
 
-			task.MarkAsDone()
-
+			task.ToggleAsDone()
 			Expect(task.Done).To(BeTrue())
+
+			task.ToggleAsDone()
+			Expect(task.Done).To(BeFalse())
 		})
 	})
 
@@ -42,7 +44,7 @@ var _ = Describe("Task", func() {
 
 		Context("when task is done", func() {
 			BeforeEach(func() {
-				task.MarkAsDone()
+				task.ToggleAsDone()
 			})
 
 			It("should return the correct string representation", func() {

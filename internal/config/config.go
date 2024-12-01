@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	TasksFilePath string
-	Environment  string
+	Environment   string
 }
 
 const (
@@ -54,7 +54,7 @@ func NewConfigWithEnv(env string) (*Config, error) {
 
 	var dataDir string
 	if env == EnvTest {
-		dataDir = filepath.Join(projectRoot, "testdata")
+		dataDir = filepath.Join(projectRoot, "testdataㅋ")
 	} else {
 		dataDir = filepath.Join(projectRoot, "data")
 	}
@@ -65,6 +65,6 @@ func NewConfigWithEnv(env string) (*Config, error) {
 
 	return &Config{
 		TasksFilePath: filepath.Join(dataDir, "tasks.json"),
-		Environment:  env,
+		Environment:   env,
 	}, nil
 }
