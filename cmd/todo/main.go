@@ -48,25 +48,30 @@ func run(taskService service.TaskService, args []string) error {
 		if len(args) < 2 {
 			return apperrors.NewInvalidInputError("할일 번호를 입력해주세요")
 		}
-		return taskService.MarkTaskAsDone(args[1])
+		return taskService.ToggleTaskDone(args[1])
 
 	case "get":
 		if len(args) < 2 {
 			return apperrors.NewInvalidInputError("할일 번호를 입력해주세요")
 		}
-		return taskService.GetTaskByID(args[1])
+		task, err := taskService.GetTask(args[1])
+		if err != nil {
+			return err
+		}
+		fmt.Println(task.String())
+		return nil
 
 	case "delete":
 		if len(args) < 2 {
 			return apperrors.NewInvalidInputError("할일 번호를 입력해주세요")
 		}
-		return taskService.DeleteTaskByID(args[1])
+		return taskService.DeleteTask(args[1])
 
 	case "update":
 		if len(args) < 3 {
 			return apperrors.NewInvalidInputError("할일 번호와 새로운 내용을 입력해주세요")
 		}
-		return taskService.UpdateTaskById(args[1], args[2])
+		return taskService.UpdateTask(args[1], args[2])
 
 	case "status":
 		return taskService.ShowStatus()

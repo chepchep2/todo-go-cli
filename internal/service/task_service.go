@@ -12,10 +12,10 @@ import (
 type TaskService interface {
 	AddTask(text string) error
 	ListTasks() error
-	MarkTaskAsDone(taskID string) error
-	GetTaskByID(taskID string) error
-	DeleteTaskByID(taskID string) error
-	UpdateTaskById(taskID string, newTask string) error
+	ToggleTaskDone(taskID string) error
+	GetTask(taskID string) (*domain.Task, error)
+	DeleteTask(taskID string) error
+	UpdateTask(taskID string, newText string) error
 	ShowStatus() error
 }
 
@@ -61,7 +61,7 @@ func (s *DefaultTaskService) ListTasks() error {
 	return nil
 }
 
-func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
+func (s *DefaultTaskService) ToggleTaskDone(taskID string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
 		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
@@ -87,22 +87,16 @@ func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
 	return nil
 }
 
-func (s *DefaultTaskService) GetTaskByID(taskID string) error {
+func (s *DefaultTaskService) GetTask(taskID string) (*domain.Task, error) {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
-		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
+		return nil, apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
-	task, err := s.repo.FindTaskByID(id)
-	if err != nil {
-		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다: " + taskID)
-	}
-
-	fmt.Println(task.String())
-	return nil
+	return s.repo.FindTaskByID(id)
 }
 
-func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
+func (s *DefaultTaskService) DeleteTask(taskID string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
 		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
@@ -121,17 +115,17 @@ func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
 	return nil
 }
 
-func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error {
+func (s *DefaultTaskService) UpdateTask(taskID string, newText string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
 		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
-	if newTask == "" {
+	if newText == "" {
 		return apperrors.NewInvalidInputError("새로운 할일 내용을 입력해주세요")
 	}
 
-	if err := s.repo.UpdateTask(id, newTask); err != nil {
+	if err := s.repo.UpdateTask(id, newText); err != nil {
 		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다: " + taskID)
 	}
 
