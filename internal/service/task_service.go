@@ -3,19 +3,19 @@ package service
 import (
 	"fmt"
 	"strconv"
-
 	"todo-go-cli/internal/domain"
+	apperrors "todo-go-cli/internal/errors"
 	"todo-go-cli/internal/repository"
 )
 
 // TaskService defines the interface for task operations
 type TaskService interface {
 	AddTask(text string) error
-	ListTasks()
-	MarkTaskAsDone(taskID string) error
-	GetTaskByID(taskID string) error
-	DeleteTaskByID(taskID string) error
-	UpdateTaskById(taskID string, newTask string) error
+	ListTasks() error
+	ToggleTaskDone(taskID string) error
+	GetTask(taskID string) (*domain.Task, error)
+	DeleteTask(taskID string) error
+	UpdateTask(taskID string, newText string) error
 	ShowStatus() error
 }
 
@@ -33,7 +33,7 @@ func NewTaskService(repo repository.TaskRepository) TaskService {
 
 func (s *DefaultTaskService) AddTask(text string) error {
 	if text == "" {
-		return fmt.Errorf("task text cannot be empty")
+		return apperrors.NewInvalidInputError("할일 내용을 입력해주세요")
 	}
 
 	tasks := s.repo.GetTasks()
@@ -41,40 +41,41 @@ func (s *DefaultTaskService) AddTask(text string) error {
 	s.repo.AddTask(newTask)
 
 	if err := s.repo.SaveTasks(); err != nil {
-		return fmt.Errorf("failed to save task: %w", err)
+		return apperrors.NewInternalError("할일을 저장하는 중 오류가 발생했습니다", err)
 	}
 
-	fmt.Printf("Task added: %s\n", text)
+	fmt.Printf("할일이 추가되었습니다: %s\n", text)
 	return nil
 }
 
-func (s *DefaultTaskService) ListTasks() {
+func (s *DefaultTaskService) ListTasks() error {
 	tasks := s.repo.GetTasks()
 	if len(tasks) == 0 {
 		fmt.Println("할일이 없습니다")
-		return
+		return nil
 	}
 
 	for _, task := range tasks {
 		fmt.Println(task.String())
 	}
+	return nil
 }
 
-func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
+func (s *DefaultTaskService) ToggleTaskDone(taskID string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", taskID)
+		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
 	task, err := s.repo.FindTaskByID(id)
 	if err != nil {
-		return err
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다: " + taskID)
 	}
 
 	task.ToggleAsDone()
 
 	if err := s.repo.SaveTasks(); err != nil {
-		return fmt.Errorf("failed to save task: %w", err)
+		return apperrors.NewInternalError("할일을 저장하는 중 오류가 발생했습니다", err)
 	}
 
 	status := "완료"
@@ -86,59 +87,53 @@ func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
 	return nil
 }
 
-func (s *DefaultTaskService) GetTaskByID(taskID string) error {
+func (s *DefaultTaskService) GetTask(taskID string) (*domain.Task, error) {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", taskID)
+		return nil, apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
-	task, err := s.repo.FindTaskByID(id)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(task.String())
-	return nil
+	return s.repo.FindTaskByID(id)
 }
 
-func (s *DefaultTaskService) DeleteTaskByID(taskID string) error {
+func (s *DefaultTaskService) DeleteTask(taskID string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", taskID)
+		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
 	err = s.repo.DeleteTasks(id)
 	if err != nil {
-		return err
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다: " + taskID)
 	}
 
 	if err := s.repo.SaveTasks(); err != nil {
-		return fmt.Errorf("failed to save tasks: %w", err)
+		return apperrors.NewInternalError("할일을 저장하는 중 오류가 발생했습니다", err)
 	}
 
-	fmt.Printf("Task %d has been deleted\n", id)
+	fmt.Printf("할일 %d번이 삭제되었습니다\n", id)
 	return nil
 }
 
-func (s *DefaultTaskService) UpdateTaskById(taskID string, newTask string) error {
+func (s *DefaultTaskService) UpdateTask(taskID string, newText string) error {
 	id, err := strconv.Atoi(taskID)
 	if err != nil {
-		return fmt.Errorf("invalid task ID: %s", taskID)
+		return apperrors.NewInvalidInputError("유효하지 않은 할일 번호입니다: " + taskID)
 	}
 
-	if newTask == "" {
-		return fmt.Errorf("new task cannot be empty")
+	if newText == "" {
+		return apperrors.NewInvalidInputError("새로운 할일 내용을 입력해주세요")
 	}
 
-	if err := s.repo.UpdateTask(id, newTask); err != nil {
-		return err
+	if err := s.repo.UpdateTask(id, newText); err != nil {
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다: " + taskID)
 	}
 
 	if err := s.repo.SaveTasks(); err != nil {
-		return fmt.Errorf("failed to save tasks: %w", err)
+		return apperrors.NewInternalError("할일을 저장하는 중 오류가 발생했습니다", err)
 	}
 
-	fmt.Printf("Task %d has been updated\n", id)
+	fmt.Printf("할일 %d번이 수정되었습니다\n", id)
 
 	return nil
 }
