@@ -2,20 +2,20 @@ package repository
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"slices"
+	"sync"
 
 	"todo-go-cli/internal/domain"
+	apperrors "todo-go-cli/internal/errors"
 )
 
-// FileTaskRepository implements TaskRepository using file storage
 type FileTaskRepository struct {
 	tasks    []*domain.Task
 	filePath string
+	mutex    sync.Mutex
 }
 
-// NewFileTaskRepository creates a new FileTaskRepository instance
 func NewFileTaskRepository(filePath string) TaskRepository {
 	repo := &FileTaskRepository{
 		tasks:    make([]*domain.Task, 0),
@@ -23,7 +23,6 @@ func NewFileTaskRepository(filePath string) TaskRepository {
 	}
 
 	if err := repo.LoadTasks(); err != nil {
-		// If file doesn't exist, start with empty tasks
 		if os.IsNotExist(err) {
 			repo.tasks = make([]*domain.Task, 0)
 		}
@@ -33,64 +32,89 @@ func NewFileTaskRepository(filePath string) TaskRepository {
 }
 
 func (r *FileTaskRepository) GetTasks() []*domain.Task {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	return r.tasks
 }
 
 func (r *FileTaskRepository) AddTask(task *domain.Task) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	r.tasks = append(r.tasks, task)
 }
 
 func (r *FileTaskRepository) FindTaskByID(id int) (*domain.Task, error) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	index := slices.IndexFunc(r.tasks, func(t *domain.Task) bool {
 		return t.ID == id
 	})
 
 	if index == -1 {
-		return nil, fmt.Errorf("task with ID %d not found", id)
+		return nil, apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다")
 	}
 
 	return r.tasks[index], nil
 }
 
 func (r *FileTaskRepository) LoadTasks() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	data, err := os.ReadFile(r.filePath)
 	if err != nil {
-		return fmt.Errorf("failed to read tasks file: %w", err)
+		return apperrors.NewInternalError("할일 목록을 불러오는 중 오류가 발생했습니다", err)
+	}
+
+	if len(data) == 0 {
+		r.tasks = make([]*domain.Task, 0)
+		return nil
 	}
 
 	return json.Unmarshal(data, &r.tasks)
 }
 
 func (r *FileTaskRepository) SaveTasks() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	data, err := json.MarshalIndent(r.tasks, "", "    ")
 	if err != nil {
-		return fmt.Errorf("failed to marshal tasks: %w", err)
+		return apperrors.NewInternalError("할일 목록을 저장하는 중 오류가 발생했습니다", err)
 	}
 
-	return os.WriteFile(r.filePath, data, 0644)
+	if err := os.WriteFile(r.filePath, data, 0644); err != nil {
+		return apperrors.NewInternalError("할일 목록을 파일에 저장하는 중 오류가 발생했습니다", err)
+	}
+
+	return nil
 }
 
 func (r *FileTaskRepository) DeleteTasks(id int) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	oldLen := len(r.tasks)
-
 	r.tasks = slices.DeleteFunc(r.tasks, func(t *domain.Task) bool {
 		return t.ID == id
 	})
 
 	if oldLen == len(r.tasks) {
-		return fmt.Errorf("task with ID %d not found", id)
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다")
 	}
 
 	return nil
 }
 
 func (r *FileTaskRepository) UpdateTask(id int, newTask string) error {
-	task, err := r.FindTaskByID(id)
-	if err != nil {
-		return err
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	idx := slices.IndexFunc(r.tasks, func(t *domain.Task) bool {
+		return t.ID == id
+	})
+
+	if idx == -1 {
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다")
 	}
 
-	task.Text = newTask
-
+	r.tasks[idx].Text = newTask
 	return nil
 }
