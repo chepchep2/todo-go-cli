@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"slices"
+	"sync"
 
 	"todo-go-cli/internal/domain"
 	apperrors "todo-go-cli/internal/errors"
@@ -12,6 +13,7 @@ import (
 type FileTaskRepository struct {
 	tasks    []*domain.Task
 	filePath string
+	mutex    sync.Mutex
 }
 
 func NewFileTaskRepository(filePath string) TaskRepository {
@@ -30,14 +32,20 @@ func NewFileTaskRepository(filePath string) TaskRepository {
 }
 
 func (r *FileTaskRepository) GetTasks() []*domain.Task {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	return r.tasks
 }
 
 func (r *FileTaskRepository) AddTask(task *domain.Task) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	r.tasks = append(r.tasks, task)
 }
 
 func (r *FileTaskRepository) FindTaskByID(id int) (*domain.Task, error) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	index := slices.IndexFunc(r.tasks, func(t *domain.Task) bool {
 		return t.ID == id
 	})
@@ -50,6 +58,8 @@ func (r *FileTaskRepository) FindTaskByID(id int) (*domain.Task, error) {
 }
 
 func (r *FileTaskRepository) LoadTasks() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	data, err := os.ReadFile(r.filePath)
 	if err != nil {
 		return apperrors.NewInternalError("할일 목록을 불러오는 중 오류가 발생했습니다", err)
@@ -64,6 +74,8 @@ func (r *FileTaskRepository) LoadTasks() error {
 }
 
 func (r *FileTaskRepository) SaveTasks() error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	data, err := json.MarshalIndent(r.tasks, "", "    ")
 	if err != nil {
 		return apperrors.NewInternalError("할일 목록을 저장하는 중 오류가 발생했습니다", err)
@@ -77,6 +89,8 @@ func (r *FileTaskRepository) SaveTasks() error {
 }
 
 func (r *FileTaskRepository) DeleteTasks(id int) error {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 	oldLen := len(r.tasks)
 	r.tasks = slices.DeleteFunc(r.tasks, func(t *domain.Task) bool {
 		return t.ID == id
@@ -90,11 +104,17 @@ func (r *FileTaskRepository) DeleteTasks(id int) error {
 }
 
 func (r *FileTaskRepository) UpdateTask(id int, newTask string) error {
-	task, err := r.FindTaskByID(id)
-	if err != nil {
-		return err
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	idx := slices.IndexFunc(r.tasks, func(t *domain.Task) bool {
+		return t.ID == id
+	})
+
+	if idx == -1 {
+		return apperrors.NewNotFoundError("해당 번호의 할일을 찾을 수 없습니다")
 	}
 
-	task.Text = newTask
+	r.tasks[idx].Text = newTask
 	return nil
 }
