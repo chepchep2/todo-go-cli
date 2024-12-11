@@ -49,7 +49,7 @@ func runServer(taskService service.TaskService) {
 		return c.JSON(fiber.Map{"message": "Task added successfully"})
 	})
 
-	app.GET("/todos/list", func(c *fiber.Ctx) error {
+	app.Get("/todos/list", func(c *fiber.Ctx) error {
 		tasks := taskService.ListTasks()
 		return c.JSON(tasks)
 	})
