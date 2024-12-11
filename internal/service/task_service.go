@@ -11,7 +11,7 @@ import (
 // TaskService defines the interface for task operations
 type TaskService interface {
 	AddTask(text string) error
-	ListTasks()
+	ListTasks() []*domain.Task
 	MarkTaskAsDone(taskID string) error
 	GetTaskByID(taskID string) error
 	DeleteTaskByID(taskID string) error
@@ -48,16 +48,9 @@ func (s *DefaultTaskService) AddTask(text string) error {
 	return nil
 }
 
-func (s *DefaultTaskService) ListTasks() {
+func (s *DefaultTaskService) ListTasks() []*domain.Task {
 	tasks := s.repo.GetTasks()
-	if len(tasks) == 0 {
-		fmt.Println("할일이 없습니다")
-		return
-	}
-
-	for _, task := range tasks {
-		fmt.Println(task.String())
-	}
+	return tasks
 }
 
 func (s *DefaultTaskService) MarkTaskAsDone(taskID string) error {
