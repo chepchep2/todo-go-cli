@@ -7,6 +7,8 @@ import (
 	"todo-go-cli/internal/config"
 	"todo-go-cli/internal/repository"
 	"todo-go-cli/internal/service"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
@@ -19,10 +21,40 @@ func main() {
 	repo := repository.NewFileTaskRepository(cfg.TasksFilePath)
 	taskService := service.NewTaskService(repo)
 
-	if err := run(taskService, os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
-		os.Exit(1)
+	if len(os.Args) > 1 && os.Args[1] == "server" {
+		runServer(taskService)
+	} else {
+		if err := run(taskService, os.Args); err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			os.Exit(1)
+		}
 	}
+}
+
+func runServer(taskService service.TaskService) {
+	app := fiber.New()
+
+	app.Post("/todos/add", func(c *fiber.Ctx) error {
+		var input struct {
+			Text string `json:"text"`
+		}
+		if err := c.BodyParser(&input); err != nil {
+			return err
+		}
+
+		if err := taskService.AddTask(input.Text); err != nil {
+			return err
+		}
+
+		return c.JSON(fiber.Map{"message": "Task added successfully"})
+	})
+
+	app.Get("/todos/list", func(c *fiber.Ctx) error {
+		tasks := taskService.ListTasks()
+		return c.JSON(tasks)
+	})
+
+	app.Listen(":8080")
 }
 
 func run(taskService service.TaskService, args []string) error {
